@@ -65,7 +65,7 @@ ssh-copy-id gpadmin@seg3
 
 
 ### Добавить 
-####->>> sudo nano /etc/sysctl.conf 
+#### ->>> sudo nano /etc/sysctl.conf 
 --------------------------------------------------------
 
 kernel.shmmax = 5000000000000
@@ -119,9 +119,9 @@ git clone https://github.com/greenplum-db/gpdb-archive.git
 cd gpdb-archive
 git submodule update --init
 
---------------------------------------------------------
+
 ########## На мастере следующие команды выполняются в папке /gpconfigs ##########
---------------------------------------------------------
+
 
 ### Собрать образ на мастере
 --------------------------------------------------------
@@ -179,7 +179,7 @@ scp ~/.bashrc gpadmin@seg3:~/.bashrc
 
 
 ### Создать файл 
-####->>> nano all_hosts
+#### ->>> nano all_hosts
 --------------------------------------------------------
 master
 seg1
@@ -188,7 +188,7 @@ seg3
 
 
 ### Создать файл 
-####->>> nano seg_hosts
+#### ->>> nano seg_hosts
 --------------------------------------------------------
 seg1
 seg2
@@ -196,7 +196,7 @@ seg3
 
 
 ### Создать на мастере директорию 
-####->>> mkdir -p /home/gpadmin/data/master 
+#### ->>> mkdir -p /home/gpadmin/data/master 
 ### Создать папки на сегментах (с мастера)
 --------------------------------------------------------
 gpssh -f seg_hosts -e 'mkdir -p /home/gpadmin/data1/primary'
