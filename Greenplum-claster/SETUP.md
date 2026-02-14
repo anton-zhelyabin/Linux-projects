@@ -6,13 +6,13 @@
 Установить виртуальную машину VirtualBox - https://www.virtualbox.org/wiki/Downloads
 Установить образ Ubuntu 22.04 - https://releases.ubuntu.com/22.04/ubuntu-22.04.5-desktop-amd64.iso
 
-# Последняя open source версия Greenplum 6.26.4 не совместима с убунту версией выше 22
+#### Последняя open source версия Greenplum 6.26.4 не совместима с убунту версией выше 22
 
 Запустить 4 машины со скаченным образом
 На этой версии может не запускаться терминал, нужно поменять в настройках язык на English(United Kingdom) и перезагрузить машину
 
 
-# Установить название хоста
+#### Установить название хоста
 --------------------------------------------------------
 sudo hostnamectl set-hostname master
 sudo hostnamectl set-hostname seg1
@@ -20,35 +20,35 @@ sudo hostnamectl set-hostname seg2
 sudo hostnamectl set-hostname seg3
 
 
-# Добавить пользователя gpadmin на всех машинах
+#### Добавить пользователя gpadmin на всех машинах
 --------------------------------------------------------
 sudo adduser gpadmin
 sudo usermod -aG sudo gpadmin
 
-# Добавить права root, перезапускаем машину и жмём shift для вызова меню GRUB.
-# Выбираем Advanced options for Ubuntu → Recovery Mode.
-# В консоле вводим команды
+#### Добавить права root, перезапускаем машину и жмём shift для вызова меню GRUB.
+#### Выбираем Advanced options for Ubuntu → Recovery Mode.
+#### В консоле вводим команды
 
 usermod -aG sudo gpadmin
 reboot
 
 
-# Установить безпарольный доступ на сегментах для мастера
+#### Установить безпарольный доступ на сегментах для мастера
 --------------------------------------------------------
 sudo visudo
 gpadmin ALL=(ALL) NOPASSWD: ALL # Добавить в конец
 
 
-# Установить ssh сервер на каждую машину
+#### Установить ssh сервер на каждую машину
 --------------------------------------------------------
 sudo apt update
 sudo apt install -y openssh-server
 sudo systemctl enable --now ssh
 
 
-# Добавить ip машин в файл хостов ->>> sudo nano /etc/hosts
+#### Добавить ip машин в файл хостов ->>> sudo nano /etc/hosts
 
-# Узнать IP ->>> hostname -I
+Узнать IP ->>> hostname -I
 --------------------------------------------------------
 192.168.206.128 master master
 192.168.206.131 seg1 seg1
@@ -56,7 +56,7 @@ sudo systemctl enable --now ssh
 192.168.206.133 seg3 seg3
 
 
-# Сгенерировать ssh ключ на мастере и отправить на каждую машину
+#### Сгенерировать ssh ключ на мастере и отправить на каждую машину
 --------------------------------------------------------
 ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
 ssh-copy-id gpadmin@seg1 # Потребуется подтверждение пароля
@@ -64,7 +64,8 @@ ssh-copy-id gpadmin@seg2
 ssh-copy-id gpadmin@seg3
 
 
-# Добавить ->>> sudo nano /etc/sysctl.conf 
+#### Добавить 
+->>> sudo nano /etc/sysctl.conf 
 --------------------------------------------------------
 
 kernel.shmmax = 5000000000000
@@ -87,7 +88,7 @@ EOF
 sudo sysctl -p
 
 
-# Добавить ->>> sudo nano /etc/security/limits.conf 
+#### Добавить ->>> sudo nano /etc/security/limits.conf 
 --------------------------------------------------------
 * soft nofile 1048576
 * hard nofile 1048576
@@ -95,7 +96,7 @@ sudo sysctl -p
 * hard nproc 1048576
 
 
-# Скопировать все изменения в файлах на сегменты
+#### Скопировать все изменения в файлах на сегменты
 --------------------------------------------------------
 scp /etc/hosts gpadmin@seg1:~ && ssh gpadmin@seg1 'sudo mv ~/etc/hosts /etc/'
 scp /etc/sysctl.conf gpadmin@seg1:~ && ssh gpadmin@seg1 'sudo mv ~/sysctl.conf /etc/'
@@ -110,28 +111,28 @@ scp /etc/sysctl.conf gpadmin@seg3:~ && ssh gpadmin@seg3 'sudo mv ~/sysctl.conf /
 scp /etc/security/limits.conf gpadmin@seg3:~ && ssh gpadmin@seg3 'sudo mv ~/etc/security/limits.conf /etc/security'
 
 
-# Перезапустить все машины
+#### Перезапустить все машины
 
-# Устанавливаем Greenplum
+#### Устанавливаем Greenplum
 --------------------------------------------------------
 git clone https://github.com/greenplum-db/gpdb-archive.git
 cd gpdb-archive
 git submodule update --init
 
 
-########### На мастере следующие команды выполняются в папке /gpconfigs ##########
+########## На мастере следующие команды выполняются в папке /gpconfigs ##########
 
 
-# Собрать образ на мастере
+#### Собрать образ на мастере
 --------------------------------------------------------
 ./configure --prefix=/usr/local/greenplum --disable-orca
 make -j$(nproc)
 sudo make -j$(nproc) install
 
 
-# Скопировать образ на сегменты
+#### Скопировать образ на сегменты
 --------------------------------------------------------
-# Создние временного архива
+ Создние временного архива
 sudo tar -czf /tmp/greenplum.tar.gz -C /usr/local greenplum # Временный архив
 sudo chown gpadmin:gpadmin /tmp/greenplum.tar.gz
 
@@ -139,13 +140,13 @@ scp /tmp/greenplum.tar.gz gpadmin@seg1:/tmp/
 scp /tmp/greenplum.tar.gz gpadmin@seg2:/tmp/
 scp /tmp/greenplum.tar.gz gpadmin@seg3:/tmp/
 
-# Распаковка архива
+ Распаковка архива
 ssh gpadmin@seg1 "sudo tar -xzf /tmp/greenplum.tar.gz -C /usr/local && sudo chown -R gpadmin:gpadmin /usr/local/greenplum"
 ssh gpadmin@seg2 "sudo tar -xzf /tmp/greenplum.tar.gz -C /usr/local && sudo chown -R gpadmin:gpadmin /usr/local/greenplum"
 ssh gpadmin@seg3 "sudo tar -xzf /tmp/greenplum.tar.gz -C /usr/local && sudo chown -R gpadmin:gpadmin /usr/local/greenplum"
 
 
-# Установить все необходимые библиотеки на все машины        
+#### Установить все необходимые библиотеки на все машины        
 --------------------------------------------------------
 ./libraries.bash
 cat ./libraries.bash | ssh gpadmin@seg1 'bash -s'
@@ -153,14 +154,14 @@ cat ./libraries.bash | ssh gpadmin@seg2 'bash -s'
 cat ./libraries.bash | ssh gpadmin@seg3 'bash -s'
 
 
-# Следующие команды выполнить на всех машинах 
+#### Следующие команды выполнить на всех машинах 
 --------------------------------------------------------
 cp -r /usr/local/greenplum/docs/cli_help/gpconfigs /home/gpadmin
 chown -R gpadmin:gpadmin /home/gpadmin*
 source /usr/local/greenplum/greenplum_path.sh
 
 
-# Открыть файл (на мастере) .bashrc и добавить в него команды
+#### Открыть файл (на мастере) .bashrc и добавить в него команды
 --------------------------------------------------------
 nano ~/.bashrc
 
@@ -168,18 +169,19 @@ source /usr/local/greenplum/greenplum_path.sh
 export MASTER_DATA_DIRECTORY=/home/gpadmin/data/master/gpseg-1
 export PGPORT=5432
 
-# Скопировать на сегменты
+#### Скопировать на сегменты
 
 scp ~/.bashrc gpadmin@seg1:~/.bashrc
 scp ~/.bashrc gpadmin@seg2:~/.bashrc
 scp ~/.bashrc gpadmin@seg3:~/.bashrc
 
-# Перезагрузить все машины
+Перезагрузить все машины
 
 
 --------------------------------------------------------
 
-# Создать файл >>>>> nano all_hosts
+#### Создать файл 
+->>> nano all_hosts
 --------------------------------------------------------
 master
 seg1
@@ -187,16 +189,17 @@ seg2
 seg3
 --------------------------------------------------------
 
-# Создать файл >>>>> seg_hosts
+#### Создать файл 
+->>> nano seg_hosts
 --------------------------------------------------------
 seg1
 seg2
 seg3
 --------------------------------------------------------
 
-# Создать на мастере директорию -> mkdir -p /home/gpadmin/data/master 
-
-# Создать папки на сегментах (с мастера)
+#### Создать на мастере директорию 
+->>> mkdir -p /home/gpadmin/data/master 
+#### Создать папки на сегментах (с мастера)
 --------------------------------------------------------
 gpssh -f seg_hosts -e 'mkdir -p /home/gpadmin/data1/primary'
 gpssh -f seg_hosts -e 'mkdir -p /home/gpadmin/data1/mirror'
@@ -207,7 +210,7 @@ gpssh -f seg_hosts -e 'mkdir -p /home/gpadmin/data2/mirror'
 
 ############ Меняем файл конфигурации ############
 
-# Конфигурационный файл можете найти в репозитории, продублирую его содержимое
+#### Конфигурационный файл можете найти в репозитории, продублирую его содержимое
 
 ->>> nano gpinitsystem_config 
 
@@ -288,13 +291,13 @@ gpinitsystem -c gpinitsystem_config
 
 
 
-## После успешного запуска проверяем работу Postgres
+#### После успешного запуска проверяем работу Postgres
 
 psql postgres
 select * from gp_segment_configuration 
 
 
-## В случае ошибки очистить папки 
+#### В случае ошибки очистить папки 
 
 ################################################
 
